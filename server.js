@@ -48,6 +48,25 @@ app.post('/todos',function(req,res){
     todos.push(body);
     res.json(body);
 });
+
+// DELETE /todos/:id
+
+app.delete('/todos/:id',function (req, res) {
+  
+  var reqTodo=parseInt(req.params.id,10);
+  var matchTodo=_.findWhere(todos,{id:reqTodo});
+
+  if(matchTodo){
+    todos=_.without(todos,matchTodo)
+    res.json(matchTodo);
+  }else{
+    res.status(404).json({"error":"this id is not exists"});
+    }
+  
+}); 
+
+
+
 app.listen(PORT,function(){
 
     console.log('Server Started at port no '+PORT);
