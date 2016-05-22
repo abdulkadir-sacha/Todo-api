@@ -1,6 +1,7 @@
 var express = require('express')
 var bodyParse = require('body-parser');
 var _ = require('underscore');
+var db = require('./db.js');
 
 var app = express()
 var PORT = process.env.PORT || 3000;
@@ -15,15 +16,39 @@ app.get('/', function(req, res) {
 //GET /todos?completed=false&q=work
 app.get('/todos', function(req, res) {
   var queryParams = req.query;
-  var filteredTodos = todos;
+  var filteredTodos = [];
 
-  if (queryParams.hasOwnProperty("completed") && queryParams.completed === 'true') {
 
-    filteredTodos = _.where(filteredTodos, {
-      completed: true
+db.todo.findAll().then(function(todos){
+
+      if(todos)
+      {
+      res.json(todos);
+       
+      }
+
+    });
+ 
+  /*if (queryParams.hasOwnProperty("completed")) {
+
+    db.todo.findAll({
+
+      where:{
+        completed:queryParams.completed
+      }
+
+    }).then(function(todos){
+
+      if(todos)
+      {
+        todos.forEach(function(todo){
+          filteredTodos.push(todo);
+        });
+      }
+
     });
 
-  } else if (queryParams.hasOwnProperty("completed") && queryParams.completed === 'false') {
+  } /*else if (queryParams.hasOwnProperty("completed") && queryParams.completed === 'false') {
 
     filteredTodos = _.where(filteredTodos, {
       completed: false
@@ -35,15 +60,34 @@ app.get('/todos', function(req, res) {
 
   if (queryParams.hasOwnProperty("q") && queryParams.q.length > 0) {
 
-    filteredTodos = _.filter(filteredTodos, function(todo) {
+    /*filteredTodos = _.filter(filteredTodos, function(todo) {
       return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1
     });
 
+db.todo.findAll({
+
+      where:{
+        description:{
+            $like : '%'+ queryParams.q+'%'
+        }
+      }
+
+    }).then(function(todos){
+
+      if(todos)
+      {
+       todos.forEach(function(todo){
+          filteredTodos.push(todo);
+        });
+      
+      }
+
+    });
+
   }
+*/
 
-
-
-  res.json(filteredTodos);
+ 
 });
 
 
@@ -71,16 +115,30 @@ app.post('/todos', function(req, res) {
 
   var body = _.pick(req.body, 'description', 'completed');
 
+  db.todo.create(body).then(function(todo) {
 
-  if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
+    res.status(200).json(todo);
+  }, function(e) {
 
-    return res.status(400).send();
-  }
-  body.id = todoNextId++;
+    res.status(400).json(e);
 
-  body.description = body.description.trim();
-  todos.push(body);
-  res.json(body);
+  }).catch(function(e) {
+
+    res.status(400).json(e);
+
+  });
+
+  /*
+    if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
+
+      return res.status(400).send();
+    }
+    body.id = todoNextId++;
+
+    body.description = body.description.trim();
+    todos.push(body);
+    res.json(body);
+  */
 });
 
 // DELETE /todos/:id
@@ -155,8 +213,9 @@ app.put('/todos/:id', function(req, res) {
 
 });
 
+db.sequelize.sync().then(function() {
+  app.listen(PORT, function() {
 
-app.listen(PORT, function() {
-
-  console.log('Server Started at port no ' + PORT);
+    console.log('Server Started at port no ' + PORT);
+  });
 });
