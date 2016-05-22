@@ -16,75 +16,41 @@ app.get('/', function(req, res) {
 //GET /todos?completed=false&q=work
 app.get('/todos', function(req, res) {
   var queryParams = req.query;
-  var filteredTodos = [];
+  var where = {};
 
 
-  db.todo.findAll().then(function(todos) {
+  
+  if (queryParams.hasOwnProperty("completed") && queryParams.completed === 'true') {
 
-    if (todos) {
-      res.json(todos);
+   where.completed=true;
 
-    }
+  } else if (queryParams.hasOwnProperty("completed") && queryParams.completed === 'false') {
 
-  });
-
-  /*if (queryParams.hasOwnProperty("completed")) {
-
-    db.todo.findAll({
-
-      where:{
-        completed:queryParams.completed
-      }
-
-    }).then(function(todos){
-
-      if(todos)
-      {
-        todos.forEach(function(todo){
-          filteredTodos.push(todo);
-        });
-      }
-
-    });
-
-  } /*else if (queryParams.hasOwnProperty("completed") && queryParams.completed === 'false') {
-
-    filteredTodos = _.where(filteredTodos, {
-      completed: false
-    });
-
+    where.completed=false;
   }
 
 
 
   if (queryParams.hasOwnProperty("q") && queryParams.q.length > 0) {
 
-    /*filteredTodos = _.filter(filteredTodos, function(todo) {
-      return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1
-    });
-
-db.todo.findAll({
-
-      where:{
-        description:{
-            $like : '%'+ queryParams.q+'%'
-        }
-      }
-
-    }).then(function(todos){
-
-      if(todos)
-      {
-       todos.forEach(function(todo){
-          filteredTodos.push(todo);
-        });
-      
-      }
-
-    });
-
+    where.description={
+      $like:'%'+queryParams.q+'%'
+    }
   }
-*/
+
+db.todo.findAll({where:where}).then(function(todos) {
+
+    if (todos) {
+
+      res.json(todos);
+
+    }else{
+          res.status(404).send("Not found");
+    }
+
+  },function(e){
+    res.status(500).send();
+  });
 
 
 });
@@ -128,17 +94,7 @@ app.post('/todos', function(req, res) {
 
   });
 
-  /*
-    if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
-
-      return res.status(400).send();
-    }
-    body.id = todoNextId++;
-
-    body.description = body.description.trim();
-    todos.push(body);
-    res.json(body);
-  */
+  
 });
 
 // DELETE /todos/:id
