@@ -19,16 +19,15 @@ app.get('/todos', function(req, res) {
   var filteredTodos = [];
 
 
-db.todo.findAll().then(function(todos){
+  db.todo.findAll().then(function(todos) {
 
-      if(todos)
-      {
+    if (todos) {
       res.json(todos);
-       
-      }
 
-    });
- 
+    }
+
+  });
+
   /*if (queryParams.hasOwnProperty("completed")) {
 
     db.todo.findAll({
@@ -87,7 +86,7 @@ db.todo.findAll({
   }
 */
 
- 
+
 });
 
 
@@ -95,15 +94,16 @@ db.todo.findAll({
 app.get('/todos/:id', function(req, res) {
 
   var reqTodo = parseInt(req.params.id, 10);
-  var matchTodo = _.findWhere(todos, {
-    id: reqTodo
-  });
+  db.todo.findById(reqTodo).then(function(todo) {
 
-  if (matchTodo) {
-    res.json(matchTodo);
-  } else {
-    res.status(404).send();
-  }
+    if (!!todo) {
+      res.json(todo);
+    } else {
+      res.status(404).send();
+    }
+  }, function(e) {
+    res.status(500).send();
+  });
 
 });
 
